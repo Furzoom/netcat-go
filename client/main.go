@@ -9,10 +9,10 @@ import (
 )
 
 func main() {
-	if err := syscall.Setgid(3001); err != nil {
+	if err := syscall.Setgid(3003); err != nil {
 		fmt.Printf("setgdi failed: %s", err)
 	}
-	gids := []int{3002, 3003, 3004, 3005, 3006, 3007, 3008}
+	gids := []int{3003, 3004, 3005, 3006, 3007, 3008}
 	if err := syscall.Setgroups(gids); err != nil {
 		fmt.Printf("setgroups failed: %s", err)
 	}
