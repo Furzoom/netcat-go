@@ -5,15 +5,23 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"syscall"
 )
 
 func main() {
+	if err := syscall.Setgid(3001); err != nil {
+		fmt.Printf("setgdi failed: %s", err)
+	}
+	gids := []int{3002, 3003, 3004, 3005, 3006, 3007, 3008}
+	if err := syscall.Setgroups(gids); err != nil {
+		fmt.Printf("setgroups failed: %s", err)
+	}
 	ip := net.ParseIP("127.0.0.1")
 	port := 30000
 	if len(os.Args) > 1 {
 		if ip = net.ParseIP(os.Args[1]); ip == nil {
 			fmt.Printf("parse %s failed\n", os.Args[1])
-			os.Exit(1);
+			os.Exit(1)
 		}
 	}
 	if len(os.Args) > 2 {
