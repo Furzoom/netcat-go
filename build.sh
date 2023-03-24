@@ -9,6 +9,13 @@ G_ARCH=amd64
 
 function init() {
     G_BASE_PATH="$(cd -- "$(dirname "$0")"; pwd)"
+    host_os=$(uname -s | tr '[:upper:]' '[:lower:]')
+    if [[ $host_os = "darwin" ]]; then
+        echo "usage: "
+        echo "  $G_BASE_PATH/scripts/build/build_android.sh"
+        echo "  $G_BASE_PATH/scripts/build/build_posix.sh"
+        exit 1
+    fi
 }
 
 function usage() {
@@ -30,9 +37,10 @@ function usage() {
 }
 
 function parseOption() {
-    echo "$@"
+    set +e
     ARGS=$(getopt -o ":hb:" --long "os:,arch:" -n "$0" -- "$@")
-    if test $? != 0; then
+    set -e
+    if [[ $? -ne 0 ]]; then
         echo "unexpected error..."
         exit 1
     fi
@@ -53,10 +61,10 @@ function parseOption() {
                 shift 2
                 ;;
             -h)
-              usage
-              shift
-              exit 0
-              ;;
+                usage
+                shift
+                exit 0
+                ;;
             --os)
                 G_OS=$2;
                 shift 2

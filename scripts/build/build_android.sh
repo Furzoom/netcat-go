@@ -45,8 +45,9 @@ function buildAndroid() {
       go build -o "$output/netcat-go" .
 }
 
-if [[ $# != 1 ]]; then
+if [[ $# -ne 1 ]]; then
     echo "usage: $G_SCRIPT_NAME <arm|arm64>"
     exit 1
 fi
+
 buildAndroid "$@"
