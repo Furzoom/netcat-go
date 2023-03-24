@@ -1,46 +1,55 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net"
 	"os"
-	"strconv"
 	"syscall"
 	"time"
 )
 
+type Option struct {
+	RemoteIP   string
+	RemotePort int
+	LocalIP    string
+	LocalPort  int
+	Count      int
+}
+
 func main() {
-	if err := syscall.Setgid(3003); err != nil {
-		fmt.Printf("setgdi failed: %s", err)
-	}
-	gids := []int{3003, 3004, 3005, 3006, 3007, 3008}
-	if err := syscall.Setgroups(gids); err != nil {
-		fmt.Printf("setgroups failed: %s", err)
-	}
-	ip := net.ParseIP("127.0.0.1")
-	port := 30000
-	if len(os.Args) > 1 {
-		if ip = net.ParseIP(os.Args[1]); ip == nil {
-			fmt.Printf("parse %s failed\n", os.Args[1])
-			os.Exit(1)
-		}
-	}
-	if len(os.Args) > 2 {
-		port, _ = strconv.Atoi(os.Args[2])
-	}
-	n := 3
-	if len(os.Args) > 3 {
-		n, _ = strconv.Atoi(os.Args[3])
+	SetGroups()
+	option := &Option{}
+
+	flag.StringVar(&option.RemoteIP, "rip", "127.0.0.1", "remote address")
+	flag.StringVar(&option.LocalIP, "lip", "0.0.0.0", "local address")
+	flag.IntVar(&option.RemotePort, "rport", 30000, "remote port")
+	flag.IntVar(&option.LocalPort, "lport", 0, "local port")
+	flag.IntVar(&option.Count, "count", 3, "send times")
+
+	flag.Parse()
+	if len(flag.Args()) > 0 {
+		fmt.Printf("unknown arguments: %+v\n", flag.Args())
+		os.Exit(1)
 	}
 
-	srcAddr := &net.UDPAddr{IP: net.IPv4zero, Port: 0}
-	dstAddr := &net.UDPAddr{IP: ip, Port: port}
+	ip := net.ParseIP(option.RemoteIP)
+	if ip == nil {
+		fmt.Printf("parse %s failed\n", os.Args[1])
+		os.Exit(1)
+	}
+
+	fmt.Printf("local: %s:%d connect to: %s:%d\n",
+		option.LocalIP, option.LocalPort, option.RemoteIP, option.RemotePort)
+	srcAddr := &net.UDPAddr{IP: net.ParseIP(option.LocalIP), Port: option.LocalPort}
+	dstAddr := &net.UDPAddr{IP: ip, Port: option.RemotePort}
+
 	conn, err := net.DialUDP("udp", srcAddr, dstAddr)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer conn.Close()
-	for i := 0; i < n; i++ {
+	for i := 0; i < option.Count; i++ {
 		conn.Write([]byte("hello"))
 		data := make([]byte, 1024)
 		n, err := conn.Read(data)
@@ -51,5 +60,15 @@ func main() {
 			fmt.Printf("read %s from <%s>\n", data[:n], conn.RemoteAddr())
 		}
 		time.Sleep(1 * time.Second)
+	}
+}
+
+func SetGroups() {
+	if err := syscall.Setgid(3003); err != nil {
+		fmt.Printf("setgdi failed: %s\n", err)
+	}
+	gids := []int{3003, 3004, 3005, 3006, 3007, 3008}
+	if err := syscall.Setgroups(gids); err != nil {
+		fmt.Printf("setgroups failed: %s\n", err)
 	}
 }
