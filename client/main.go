@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -27,6 +28,10 @@ func main() {
 	if len(os.Args) > 2 {
 		port, _ = strconv.Atoi(os.Args[2])
 	}
+	n := 3
+	if len(os.Args) > 3 {
+		n, _ = strconv.Atoi(os.Args[3])
+	}
 
 	srcAddr := &net.UDPAddr{IP: net.IPv4zero, Port: 0}
 	dstAddr := &net.UDPAddr{IP: ip, Port: port}
@@ -35,8 +40,16 @@ func main() {
 		fmt.Println(err)
 	}
 	defer conn.Close()
-	conn.Write([]byte("hello"))
-	data := make([]byte, 1024)
-	n, err := conn.Read(data)
-	fmt.Printf("read %s from <%s>\n", data[:n], conn.RemoteAddr())
+	for i := 0; i < n; i++ {
+		conn.Write([]byte("hello"))
+		data := make([]byte, 1024)
+		n, err := conn.Read(data)
+		if err != nil {
+			fmt.Printf("read from <%s>: %s\n", conn.RemoteAddr(), err)
+			break
+		} else {
+			fmt.Printf("read %s from <%s>\n", data[:n], conn.RemoteAddr())
+		}
+		time.Sleep(1 * time.Second)
+	}
 }
