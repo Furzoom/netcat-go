@@ -55,6 +55,7 @@ function parseOption() {
             -h)
               usage
               shift
+              exit 0
               ;;
             --os)
                 G_OS=$2;
