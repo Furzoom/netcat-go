@@ -8,7 +8,8 @@ G_SCRIPT_NAME="$(basename $0)"
 function buildPosix() {
     output="$G_BASE_PATH/build/$1/$2"
     rm -rf "$output" && mkdir -p "$output"
-    GOOS="$1" GOARCH="$2" go build -o "$output/netcat-go" .
+    GOOS="$1" GOARCH="$2" go build -o "$output/netcat-go" ./cmd/netcat
+    GOOS="$1" GOARCH="$2" go build -o "$output/client" ./cmd/client
 }
 
 os=$(uname -s | tr '[:upper:]' '[:lower:]')

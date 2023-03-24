@@ -42,7 +42,13 @@ function buildAndroid() {
       GOOS="android" \
       GOARCH="$1" \
       CC=$TOOLCHAIN/bin/$TARGET$API-clang \
-      go build -o "$output/netcat-go" .
+      go build -o "$output/netcat-go" ./cmd/netcat
+
+    CGO_ENABLED=1 \
+      GOOS="android" \
+      GOARCH="$1" \
+      CC=$TOOLCHAIN/bin/$TARGET$API-clang \
+      go build -o "$output/client" ./cmd/client
 }
 
 if [[ $# -ne 1 ]]; then
