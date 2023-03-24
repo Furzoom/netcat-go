@@ -1,8 +1,15 @@
 #!/bin/bash
 
+set -e
+
+G_BASE_PATH=
 G_BUILD_TYPE=release
 G_OS=linux
 G_ARCH=amd64
+
+function init() {
+    G_BASE_PATH="$(cd -- "$(dirname "$0")"; pwd)"
+}
 
 function usage() {
     echo "Usage: $0 [options]"
@@ -74,57 +81,20 @@ function parseOption() {
     fi
 }
 
-function buildAndroid() {
-    ######################## START CONFIGURATION ########################
-    # Only choose one of these
-    NDK=$NDK_R21
-    #NDK=$NDK_R17
-
-    # Only choose one of these, depending on your device...
-    #TARGET=aarch64-linux-android
-    TARGET=armv7a-linux-androideabi
-    #TARGET=i686-linux-android
-    #TARGET=x86_64-linux-android
-
-    # Set this to your minSdkVersion.
-    API=21
-
-    ######################### END CONFIGURATION #########################
-
-    if test -z "$NDK"; then
-        echo "environment variable \$NDK is not set"
-        exit 1
-    fi
-
-    TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)
-    output="build/android/$G_ARCH"
-    mkdir -p "$output"
-    # Build
-    CGO_ENABLED=1 \
-      GOOS="$G_OS" \
-      GOARCH="$G_ARCH" \
-      CC=$TOOLCHAIN/bin/$TARGET$API-clang \
-      go build -o "$output/netcat-go" .
-}
-
-function buildPosix() {
-    output="build/$G_OS/$G_ARCH"
-    rm -rf "$output" && mkdir -p "$output"
-    GOOS="$G_OS" GOARCH="$G_ARCH" go build -o "$output/netcat-go ."
-}
-
 function build() {
     if [[ "$G_OS" = "android" ]]; then
-        buildAndroid
+        "$G_BASE_PATH/scripts/build/build_android.sh" "$G_ARCH"
     elif [[ "$G_OS" = "linux" || "$G_OS" = "darwin" ]]; then
-        buildPosix
+        "$G_BASE_PATH/scripts/build/build_posix.sh" "$G_OS" "$G_ARCH"
     else
         usage
         exit 1
     fi
+    echo "built $G_OS/$G_ARCH done"
 }
 
 function main() {
+    init "$@"
     parseOption "$@"
     build
 }
